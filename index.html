@@ -1,1027 +1,165 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste Profissional de Excel</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: 300;
-        }
-        
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-        
-        .login-form {
-            padding: 40px;
-            text-align: center;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-        
-        .timer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #dc3545;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 50px;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(220,53,69,0.3);
-            z-index: 1000;
-        }
-        
-        .timer.warning {
-            background: #ffc107;
-            color: #333;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        .level-info {
-            background: #f8f9fa;
-            padding: 20px;
-            text-align: center;
-            border-bottom: 3px solid #007bff;
-        }
-        
-        .question-counter {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .test-section {
-            padding: 30px;
-            display: none;
-            user-select: none;
-        }
-        
-        .test-section.active {
-            display: block;
-        }
-        
-        .question {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border-left: 5px solid #007bff;
-        }
-        
-        .question h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        
-        .options {
-            display: grid;
-            gap: 10px;
-        }
-        
-        .option {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        
-        .option:hover {
-            border-color: #007bff;
-            background: #f0f8ff;
-        }
-        
-        .option.selected {
-            border-color: #28a745;
-            background: #d4edda;
-        }
-        
-        .option.disabled {
-            pointer-events: none;
-            opacity: 0.6;
-        }
-        
-        .option input[type="radio"] {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
-        }
-        
-        .btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #28a745, #20c997);
-        }
-        
-        .results {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .results.show {
-            display: block;
-        }
-        
-        .score {
-            font-size: 3em;
-            font-weight: bold;
-            color: #28a745;
-            margin: 20px 0;
-        }
-        
-        .level-results {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .level-result {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 15px;
-            border-left: 5px solid;
-        }
-        
-        .level-result.basic {
-            border-left-color: #28a745;
-        }
-        
-        .level-result.intermediate {
-            border-left-color: #ffc107;
-        }
-        
-        .level-result.advanced {
-            border-left-color: #fd7e14;
-        }
-        
-        .level-result.expert {
-            border-left-color: #dc3545;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007bff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 5px;
-            display: block;
-            min-height: 20px;
-        }
-
-        .form-group.invalid input, .form-group.invalid select {
-            border-color: #dc3545;
-            background: #fff1f2;
-        }
-
-        input:invalid:focus, select:invalid:focus {
-            border-color: #dc3545;
-            box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
-        }
-
-        button:disabled .loading {
-            display: inline-block;
-        }
-        
-        @media (max-width: 768px) {
-            .timer {
-                position: relative;
-                top: 0;
-                right: 0;
-                margin-bottom: 20px;
-            }
-            
-            .level-results {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 Teste Profissional de Excel</h1>
-            <p>Avalie seus conhecimentos em Excel com funções em português</p>
-        </div>
-        
-        <div class="timer hidden" id="timer">⏰ 01:00</div>
-        
-        <div class="login-form" id="loginForm">
-            <h2 style="margin-bottom: 30px; color: #333;">Dados do Candidato</h2>
-            <form id="candidateForm" onsubmit="startTest(event)">
-                <div class="form-group">
-                    <label for="candidateName">Nome Completo *</label>
-                    <input type="text" id="candidateName" required placeholder="Digite seu nome completo" pattern="[A-Za-zÀ-ÿ\s]{2,}" title="O nome deve conter apenas letras e ter no mínimo 2 caracteres">
-                    <span class="error-message" id="nameError"></span>
-                </div>
-                <div class="form-group">
-                    <label for="candidateEmail">E-mail *</label>
-                    <input type="email" id="candidateEmail" required placeholder="Digite seu e-mail" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Digite um e-mail válido (exemplo: nome@dominio.com)">
-                    <span class="error-message" id="emailError"></span>
-                </div>
-                <div class="form-group">
-                    <label for="testLevel">Nível do Teste *</label>
-                    <select id="testLevel" required>
-                        <option value="" disabled selected>Selecione o nível do teste</option>
-                        <option value="0">Básico</option>
-                        <option value="1">Intermediário</option>
-                        <option value="2">Avançado</option>
-                        <option value="3">Especialista</option>
-                    </select>
-                    <span class="error-message" id="levelError"></span>
-                </div>
-                <div style="background: #e3f2fd; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left;">
-                    <h4 style="color: #1976d2; margin-bottom: 10px;">ℹ️ Instruções do Teste:</h4>
-                    <ul style="color: #666; line-height: 1.6;">
-                        <li>• Cada questão tem <strong>1 minuto</strong> para ser respondida</li>
-                        <li>• O teste possui <strong>15 questões</strong> do nível selecionado (Básico, Intermediário, Avançado ou Especialista)</li>
-                        <li>• As questões são apresentadas em ordem aleatória</li>
-                        <li>• Cada questão tem <strong>apenas uma resposta correta</strong></li>
-                        <li>• Após responder ou o tempo acabar, você será levado automaticamente à próxima questão</li>
-                        <li>• <strong>Não é possível voltar</strong> para questões anteriores ou copiar as questões</li>
-                        <li>• O resultado será enviado por e-mail e disponível como PDF</li>
-                        <li>• Evite atualizar a página, pois isso reiniciará o teste</li>
-                    </ul>
-                </div>
-                <button type="submit" class="btn btn-success" id="startButton">🚀 Iniciar Teste</button>
-                <span class="loading hidden" id="startLoading"></span>
-            </form>
-        </div>
-        
-        <div class="test-area hidden" id="testArea">
-            <div class="level-info">
-                <div class="question-counter" id="questionCounter">Questão 1 de 15</div>
-                <div style="color: #666;" id="levelDescription">Função: Conhecimentos básicos do Excel</div>
-            </div>
-            
-            <div class="test-section active" id="currentQuestion"></div>
-        </div>
-        
-        <div class="results hidden" id="results">
-            <h2 style="color: #333; margin-bottom: 30px;">📊 Resultados do Teste</h2>
-            <div class="score" id="finalScore">0%</div>
-            <div class="level-results" id="levelResults"></div>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <p id="resultMessage"><strong>✅ Teste concluído!</strong></p>
-                <p>Os resultados foram enviados para o e-mail informado.</p>
-                <button class="btn" onclick="downloadPDF()">📄 Baixar Resultado em PDF</button>
-                <div class="loading hidden" id="emailLoading"></div>
-            </div>
-            <button class="btn" onclick="location.reload()">🔄 Fazer Novo Teste</button>
-        </div>
-    </div>
-
-    <script>
-        // Dados do teste
-        let currentQuestionIndex = 0;
-        let currentLevel = 0;
-        let answers = [];
-        let timer;
-        let timeLeft = 60;
-        let candidateData = {};
-        let testStartTime;
-        let shuffledQuestions = [];
-        let isAnswering = false;
-
-        const levels = ['Básico', 'Intermediário', 'Avançado', 'Especialista'];
-        const levelColors = ['#28a745', '#ffc107', '#fd7e14', '#dc3545'];
-        const levelDescriptions = [
-            'Função: Conhecimentos básicos do Excel',
-            'Função: Conhecimentos intermediários do Excel',
-            'Função: Conhecimentos avançados do Excel',
-            'Função: Conhecimentos especializados do Excel'
-        ];
-        
-        // Perguntas do teste com respostas corretas (funções em português, 5 opções por questão, apenas uma correta)
-        const questions = [
-            // NÍVEL BÁSICO (15 questões)
-            {
-                level: 0,
-                question: "Qual atalho do teclado abre uma nova pasta de trabalho no Excel?",
-                options: ["Ctrl + N", "Ctrl + O", "Ctrl + S", "Ctrl + A", "Alt + N"],
-                correct: 0
-            },
-            {
-                level: 0,
-                question: "Como você salva um arquivo do Excel?",
-                options: ["Alt + S", "Ctrl + S", "Shift + S", "F12", "Ctrl + F"],
-                correct: 1
-            },
-            {
-                level: 0,
-                question: "Qual símbolo inicia uma fórmula no Excel?",
-                options: ["@", "#", "=", "+", "&"],
-                correct: 2
-            },
-            {
-                level: 0,
-                question: "Como você seleciona uma coluna inteira no Excel?",
-                options: ["Clicando no cabeçalho da coluna", "Ctrl + Shift + Seta", "Ctrl + A", "Clicando na primeira célula", "Shift + Espaço"],
-                correct: 0
-            },
-            {
-                level: 0,
-                question: "Qual função soma valores em uma faixa de células?",
-                options: ["ADICIONAR", "TOTAL", "SOMA", "SOMAR", "CONT.SOMA"],
-                correct: 2
-            },
-            {
-                level: 0,
-                question: "Como você copia uma célula no Excel?",
-                options: ["Ctrl + X", "Ctrl + V", "Ctrl + C", "Ctrl + Z", "Alt + C"],
-                correct: 2
-            },
-            {
-                level: 0,
-                question: "Qual tecla você pressiona para editar uma célula?",
-                options: ["F1", "F2", "F3", "F4", "F5"],
-                correct: 1
-            },
-            {
-                level: 0,
-                question: "Como você desfaz a última ação no Excel?",
-                options: ["Ctrl + Y", "Ctrl + Z", "Alt + Z", "Shift + Z", "Ctrl + D"],
-                correct: 1
-            },
-            {
-                level: 0,
-                question: "Qual é a referência correta para a célula na coluna A, linha 5?",
-                options: ["5A", "A5", "A-5", "5-A", "A:5"],
-                correct: 1
-            },
-            {
-                level: 0,
-                question: "Como você aplica negrito a uma célula?",
-                options: ["Ctrl + I", "Ctrl + U", "Ctrl + B", "Alt + B", "Shift + B"],
-                correct: 2
-            },
-            {
-                level: 0,
-                question: "Qual função calcula a média de valores?",
-                options: ["MEAN", "AVG", "MÉDIA", "MEDIANA", "AVERAGE"],
-                correct: 2
-            },
-            {
-                level: 0,
-                question: "Como você insere uma nova linha?",
-                options: ["Botão direito > Inserir", "Ctrl + I", "Alt + I", "Shift + Enter", "Ctrl + L"],
-                correct: 0
-            },
-            {
-                level: 0,
-                question: "Qual é o formato padrão de arquivo do Excel 2019?",
-                options: [".xls", ".xlsx", ".csv", ".txt", ".docx"],
-                correct: 1
-            },
-            {
-                level: 0,
-                question: "Como você move para a próxima célula após digitar?",
-                options: ["Espaço", "Enter", "Shift", "Ctrl", "Alt"],
-                correct: 1
-            },
-            {
-                level: 0,
-                question: "Qual função conta o número de células não vazias?",
-                options: ["CONT.NÚM", "CONT.VALORES", "CONT.SE", "CONT.VAZIO", "CONT.TOTAL"],
-                correct: 1
-            },
-            
-            // NÍVEL INTERMEDIÁRIO (15 questões)
-            {
-                level: 1,
-                question: "Qual função procura um valor em uma tabela e retorna um valor correspondente?",
-                options: ["PROCV", "PROCH", "PROCURAR", "LOCALIZAR", "BUSCAR"],
-                correct: 0
-            },
-            {
-                level: 1,
-                question: "Como você cria uma referência absoluta?",
-                options: ["Usando parênteses ()", "Usando aspas \"\"", "Usando cifrão $", "Usando hashtag #", "Usando chaves {}"],
-                correct: 2
-            },
-            {
-                level: 1,
-                question: "Qual função testa uma condição e retorna um valor se verdadeira, outro se falsa?",
-                options: ["CASO", "SE", "QUANDO", "TESTE", "SI"],
-                correct: 1
-            },
-            {
-                level: 1,
-                question: "Como você congela painéis no Excel?",
-                options: ["Guia Exibir > Congelar Painéis", "Ctrl + F", "Alt + F", "Shift + F", "Ctrl + P"],
-                correct: 0
-            },
-            {
-                level: 1,
-                question: "Qual função remove espaços extras de uma string?",
-                options: ["LIMPAR", "ARRUMAR", "REMOVER", "TIRAR", "CLEAN"],
-                correct: 1
-            },
-            {
-                level: 1,
-                question: "Como você aplica formatação condicional?",
-                options: ["Guia Inserir > Formatação Condicional", "Guia Página Inicial > Formatação Condicional", "Guia Fórmulas > Formatação Condicional", "Ctrl + Shift + F", "Alt + F"],
-                correct: 1
-            },
-            {
-                level: 1,
-                question: "Qual função conta células que atendem a um critério específico?",
-                options: ["CONT.NÚM", "CONT.VALORES", "CONT.SE", "CONT.SES", "CONT.TOTAL"],
-                correct: 2
-            },
-            {
-                level: 1,
-                question: "Como você cria um gráfico no Excel?",
-                options: ["Guia Inserir > Gráficos", "Guia Página Inicial > Gráficos", "Alt + G", "F11", "Ctrl + G"],
-                correct: 0
-            },
-            {
-                level: 1,
-                question: "Qual função retorna a data atual?",
-                options: ["AGORA", "HOJE", "DATA", "ATUAL", "TEMPO"],
-                correct: 1
-            },
-            {
-                level: 1,
-                question: "Como você protege uma planilha?",
-                options: ["Guia Revisão > Proteger Planilha", "Guia Página Inicial > Proteger", "Ctrl + P", "Alt + P", "Shift + P"],
-                correct: 0
-            },
-            {
-                level: 1,
-                question: "Qual função concatena strings?",
-                options: ["JUNTAR", "CONCAT", "CONCATENAR", "MESCLAR", "UNIR"],
-                correct: 2
-            },
-            {
-                level: 1,
-                question: "Como você remove duplicatas em uma lista?",
-                options: ["Guia Dados > Remover Duplicatas", "Guia Página Inicial > Remover Duplicatas", "Ctrl + D", "Alt + D", "Shift + D"],
-                correct: 0
-            },
-            {
-                level: 1,
-                question: "Qual atalho abre a caixa de diálogo 'Ir Para'?",
-                options: ["F5", "Ctrl + H", "Ctrl + G", "Alt + G", "Ctrl + F"],
-                correct: 2
-            },
-            {
-                level: 1,
-                question: "Como você transpõe dados (transforma linhas em colunas)?",
-                options: ["Copiar > Colar Especial > Transpor", "Função TRANSPOR", "Guia Dados > Transpor", "Ctrl + T", "Alt + T"],
-                correct: 0
-            },
-            {
-                level: 1,
-                question: "Qual função arredonda um número para um número específico de casas decimais?",
-                options: ["ARRED", "ARREDONDAR.PARA.CIMA", "ARREDONDAR.PARA.BAIXO", "TRUNCAR", "ROUND"],
-                correct: 0
-            },
-            
-            // NÍVEL AVANÇADO (15 questões)
-            {
-                level: 2,
-                question: "Qual combinação de funções substitui PROCV para buscas bidirecionais?",
-                options: ["ÍNDICE/CORRESP", "PROCX", "PROCH", "ESCOLHER", "BUSCAR"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Como você cria uma Tabela Dinâmica?",
-                options: ["Guia Inserir > Tabela Dinâmica", "Alt + N", "Ctrl + T", "F11", "Ctrl + D"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Qual função trata erros de divisão por zero?",
-                options: ["É.ERRO", "SE.ERRO", "#DIV/0!", "ERRO.TIPO", "TRATAR"],
-                correct: 1
-            },
-            {
-                level: 2,
-                question: "Como você cria uma lista suspensa (dropdown)?",
-                options: ["Guia Dados > Validação de Dados", "Guia Inserir > Lista", "Ctrl + L", "Alt + V", "Shift + V"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Qual função retorna o maior valor em um intervalo?",
-                options: ["MAIOR", "MÁXIMO", "MAX", "SUPREMO", "TOP"],
-                correct: 1
-            },
-            {
-                level: 2,
-                question: "Como você aplica subtotais automáticos?",
-                options: ["Guia Dados > Subtotal", "Função SUBTOTAL", "Alt + S", "Ctrl + S", "Shift + S"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Qual função conta células vazias em um intervalo?",
-                options: ["CONT.VAZIO", "CONT.BRANCO", "VAZIO", "CÉLULAS.VAZIAS", "BLANK"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Como você cria um nome definido para um intervalo?",
-                options: ["Guia Fórmulas > Definir Nome", "Ctrl + F3", "Alt + N", "Ctrl + N", "Shift + N"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Qual função extrai caracteres da esquerda de uma string?",
-                options: ["ESQUERDA", "DIREITA", "EXT.TEXTO", "PARTE", "SUBSTRING"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Como você agrupa dados em uma Tabela Dinâmica?",
-                options: ["Botão direito > Agrupar", "Guia Analisar > Agrupar", "Ctrl + G", "Alt + G", "Shift + G"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Qual função converte texto em número?",
-                options: ["VALOR", "TEXTO", "NÚMERO", "CONVERTER", "CAST"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Como você protege células específicas?",
-                options: ["Formatar Células > Proteção > Desbloquear células desejadas, depois proteger planilha", "Ctrl + P", "Guia Revisão > Proteger Células", "Alt + P", "Shift + P"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Qual função retorna a posição de um valor em uma matriz?",
-                options: ["CORRESP", "POSIÇÃO", "LOCALIZAR", "ÍNDICE", "SEARCH"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Como você cria uma fórmula matricial?",
-                options: ["Ctrl + Shift + Enter", "Ctrl + Alt + Enter", "Shift + Enter", "Alt + Enter", "Ctrl + Enter"],
-                correct: 0
-            },
-            {
-                level: 2,
-                question: "Qual função calcula o desvio padrão de uma amostra?",
-                options: ["DESVPAD", "DESVPAD.A", "DESVPAD.P", "DESVIO", "STDDEV"],
-                correct: 1
-            },
-            
-            // NÍVEL ESPECIALISTA (15 questões)
-            {
-                level: 3,
-                question: "Qual função do Power Query é usada para combinar tabelas?",
-                options: ["Table.Join", "Table.Combine", "Table.Merge", "Table.Union", "Table.Append"],
-                correct: 2
-            },
-            {
-                level: 3,
-                question: "Como você cria uma macro no Excel?",
-                options: ["Guia Desenvolvedor > Gravar Macro", "Alt + F11", "Visual Basic Editor", "Ctrl + M", "Shift + M"],
-                correct: 0
-            },
-            {
-                level: 3,
-                question: "Qual função retorna todos os valores únicos de um intervalo (Excel 365)?",
-                options: ["ÚNICO", "FILTRO", "CLASSIFICAR", "SEQUÊNCIA", "DISTINCT"],
-                correct: 0
-            },
-            {
-                level: 3,
-                question: "Como você cria um gráfico dinâmico?",
-                options: ["Inserir > Gráfico Dinâmico", "Com base em Tabela Dinâmica", "Power BI", "Ctrl + D", "Alt + D"],
-                correct: 1
-            },
-            {
-                level: 3,
-                question: "Qual função substitui múltiplas funções SE aninhadas?",
-                options: ["MÚLTIPLO.SE", "SE.MÚLTIPLO", "SWITCH", "IFS", "MULTI.SE"],
-                correct: 3
-            },
-            {
-                level: 3,
-                question: "Como você conecta Excel a uma base de dados externa?",
-                options: ["Guia Dados > Obter Dados", "Power Query", "Conexões ODBC", "Ctrl + Q", "Alt + Q"],
-                correct: 0
-            },
-            {
-                level: 3,
-                question: "Qual função cria uma matriz de sequência?",
-                options: ["SEQUÊNCIA", "MATRIZ", "SÉRIE", "RANGE", "ARRAY"],
-                correct: 0
-            },
-            {
-                level: 3,
-                question: "Como você otimiza fórmulas para melhor performance?",
-                options: ["Usar referências absolutas", "Evitar funções voláteis", "Usar tabelas estruturadas", "Usar macros", "Evitar formatação condicional"],
-                correct: 1
-            },
-            {
-                level: 3,
-                question: "Qual linguagem é usada para macros no Excel?",
-                options: ["JavaScript", "VBA (Visual Basic for Applications)", "Python", "C#", "SQL"],
-                correct: 1
-            },
-            {
-                level: 3,
-                question: "Como você cria uma consulta parametrizada no Power Query?",
-                options: ["Parâmetros > Novo Parâmetro", "Função Parameter", "Ctrl + P", "Não é possível", "Alt + P"],
-                correct: 0
-            },
-            {
-                level: 3,
-                question: "Qual função permite filtrar dados com múltiplos critérios (Excel 365)?",
-                options: ["FILTRO", "FILTRAR", "QUERY", "SELECT", "FILTER"],
-                correct: 0
-            },
-            {
-                level: 3,
-                question: "Como você implementa segurança avançada em uma pasta de trabalho?",
-                options: ["Assinatura digital", "Criptografia", "Restrição de acesso IRM", "Ctrl + S", "Alt + S"],
-                correct: 1
-            },
-            {
-                level: 3,
-                question: "Qual função retorna dados de uma tabela baseado em critérios (Excel 365)?",
-                options: ["PROCX", "XLOOKUP", "LOOKUP.ADVANCED", "SEARCH.TABLE", "ADVANCED.LOOKUP"],
-                correct: 1
-            },
-            {
-                level: 3,
-                question: "Como você automatiza tarefas repetitivas sem usar macros?",
-                options: ["Power Automate", "Preenchimento Relâmpago", "Tabelas Dinâmicas", "Ctrl + A", "Alt + A"],
-                correct: 0
-            },
-            {
-                level: 3,
-                question: "Qual é a melhor prática para trabalhar com Big Data no Excel?",
-                options: ["Usar Power Pivot", "Modelo de dados", "Conexões externas", "Usar VBA", "Usar macros"],
-                correct: 0
-            }
-        ];
-        
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function startTest(event) {
-            event.preventDefault();
-            const nameInput = document.getElementById('candidateName');
-            const emailInput = document.getElementById('candidateEmail');
-            const levelInput = document.getElementById('testLevel');
-            const nameError = document.getElementById('nameError');
-            const emailError = document.getElementById('emailError');
-            const levelError = document.getElementById('levelError');
-            const startButton = document.getElementById('startButton');
-            const startLoading = document.getElementById('startLoading');
-
-            nameError.textContent = '';
-            emailError.textContent = '';
-            levelError.textContent = '';
-            nameInput.parentElement.classList.remove('invalid');
-            emailInput.parentElement.classList.remove('invalid');
-            levelInput.parentElement.classList.remove('invalid');
-
-            const name = nameInput.value.trim();
-            const email = emailInput.value.trim();
-            const selectedLevel = parseInt(levelInput.value);
-
-            let isValid = true;
-            if (!name) {
-                nameError.textContent = 'Por favor, preencha o nome completo.';
-                nameInput.parentElement.classList.add('invalid');
-                isValid = false;
-            } else if (!/^[A-Za-zÀ-ÿ\s]{2,}$/.test(name)) {
-                nameError.textContent = 'O nome deve conter apenas letras e ter no mínimo 2 caracteres.';
-                nameInput.parentElement.classList.add('invalid');
-                isValid = false;
-            }
-
-            if (!email) {
-                emailError.textContent = 'Por favor, preencha o e-mail.';
-                emailInput.parentElement.classList.add('invalid');
-                isValid = false;
-            } else if (!/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)) {
-                emailError.textContent = 'Digite um e-mail válido (exemplo: nome@dominio.com).';
-                emailInput.parentElement.classList.add('invalid');
-                isValid = false;
-            }
-
-            if (!levelInput.value) {
-                levelError.textContent = 'Por favor, selecione o nível do teste.';
-                levelInput.parentElement.classList.add('invalid');
-                isValid = false;
-            }
-
-            if (!isValid) return;
-
-            startButton.disabled = true;
-            startLoading.classList.remove('hidden');
-
-            // Filtrar questões do nível selecionado
-            currentLevel = selectedLevel;
-            shuffledQuestions = shuffleArray([...questions.filter(q => q.level === selectedLevel)]);
-
-            setTimeout(() => {
-                candidateData = { name, email, level: levels[selectedLevel] };
-                testStartTime = new Date();
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('testArea').classList.remove('hidden');
-                document.getElementById('timer').classList.remove('hidden');
-                document.getElementById('levelDescription').textContent = levelDescriptions[selectedLevel];
-                showQuestion();
-                startTimer();
-                startButton.disabled = false;
-                startLoading.classList.add('hidden');
-            }, 1000);
-        }
-
-        // Prevenir cópia e clique direito
-        document.addEventListener('DOMContentLoaded', () => {
-            const testArea = document.getElementById('testArea');
-            testArea.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                alert('A cópia de questões não é permitida.');
-            });
-            testArea.addEventListener('selectstart', (e) => {
-                e.preventDefault();
-            });
-            document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
-                    e.preventDefault();
-                    alert('A cópia de questões não é permitida.');
-                }
-            });
-        });
-
-        window.addEventListener('beforeunload', (event) => {
-            if (!document.getElementById('loginForm').classList.contains('hidden')) return;
-            event.preventDefault();
-            event.returnValue = 'Você está no meio do teste. Sair reiniciará o teste. Deseja continuar?';
-        });
-
-        function showQuestion() {
-            if (currentQuestionIndex >= shuffledQuestions.length) {
-                finishTest();
-                return;
-            }
-
-            const question = shuffledQuestions[currentQuestionIndex];
-            const questionContainer = document.getElementById('currentQuestion');
-            const counter = document.getElementById('questionCounter');
-            
-            counter.textContent = `Questão ${currentQuestionIndex + 1} de ${shuffledQuestions.length} - Nível ${levels[currentLevel]}`;
-            
-            questionContainer.innerHTML = `
-                <div class="question">
-                    <h3>${currentQuestionIndex + 1}. ${question.question}</h3>
-                    <div class="options">
-                        ${question.options.map((option, index) => `
-                            <label class="option" onclick="selectAnswer(${index})">
-                                <input type="radio" name="currentAnswer" value="${index}">
-                                ${option}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-            
-            isAnswering = false;
-            resetTimer();
-        }
-        
-        function selectAnswer(answerIndex) {
-            if (isAnswering) return;
-            isAnswering = true;
-            
-            const options = document.querySelectorAll('.option');
-            options.forEach((option, index) => {
-                option.classList.remove('selected');
-                option.classList.add('disabled');
-                if (index === answerIndex) {
-                    option.classList.add('selected');
-                }
-            });
-            
-            answers[currentQuestionIndex] = answerIndex;
-            console.log(`Questão ${currentQuestionIndex + 1}: Resposta selecionada = ${answerIndex}, Correta = ${shuffledQuestions[currentQuestionIndex].correct}`);
-            
-            setTimeout(() => {
-                nextQuestion();
-            }, 500);
-        }
-        
-        function nextQuestion() {
-            currentQuestionIndex++;
-            console.log(`Próxima questão: currentQuestionIndex = ${currentQuestionIndex}, currentLevel = ${levels[currentLevel]}`);
-            if (currentQuestionIndex >= shuffledQuestions.length) {
-                finishTest();
-            } else {
-                showQuestion();
-            }
-        }
-        
-        function startTimer() {
-            const timerElement = document.getElementById('timer');
-            timer = setInterval(() => {
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                timerElement.textContent = `⏰ ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                if (timeLeft <= 10) {
-                    timerElement.classList.add('warning');
-                }
-                if (timeLeft <= 0) {
-                    answers[currentQuestionIndex] = -1;
-                    alert('Tempo esgotado para esta questão!');
-                    nextQuestion();
-                }
-            }, 1000);
-        }
-        
-        function resetTimer() {
-            clearInterval(timer);
-            timeLeft = 60;
-            const timerElement = document.getElementById('timer');
-            timerElement.textContent = `⏰ 01:00`;
-            timerElement.classList.remove('warning');
-            startTimer();
-        }
-        
-        function finishTest() {
-            clearInterval(timer);
-            document.getElementById('testArea').classList.add('hidden');
-            document.getElementById('timer').classList.add('hidden');
-            document.getElementById('results').classList.add('show');
-
-            let correctCount = 0;
-            for (let i = 0; i < shuffledQuestions.length; i++) {
-                if (answers[i] === shuffledQuestions[i].correct) {
-                    correctCount++;
-                }
-            }
-
-            const totalQuestions = shuffledQuestions.length;
-            const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
-            document.getElementById('finalScore').textContent = `${scorePercentage}%`;
-
-            const levelResultsContainer = document.getElementById('levelResults');
-            levelResultsContainer.innerHTML = `
-                <div class="level-result ${levels[currentLevel].toLowerCase()}">
-                    <h4>Nível ${levels[currentLevel]}</h4>
-                    <p>Acertos: ${correctCount} de ${totalQuestions}</p>
-                    <p>Precisão: ${scorePercentage}%</p>
-                </div>
-            `;
-
-            document.getElementById('resultMessage').innerHTML = `<strong>✅ Teste do nível ${levels[currentLevel]} concluído!</strong>`;
-            console.log(`Teste finalizado: Nível ${levels[currentLevel]}, Acertos = ${correctCount}/${totalQuestions}, Precisão = ${scorePercentage}%`);
-            downloadPDF();
-        }
-
-        function downloadPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const date = new Date().toLocaleString('pt-BR');
-
-            doc.setFontSize(16);
-            doc.text('Resultado do Teste Profissional de Excel', 20, 20);
-            doc.setFontSize(12);
-            doc.text(`Candidato: ${candidateData.name}`, 20, 30);
-            doc.text(`E-mail: ${candidateData.email}`, 20, 40);
-            doc.text(`Nível: ${candidateData.level}`, 20, 50);
-            doc.text(`Data: ${date}`, 20, 60);
-
-            let y = 80;
-            const correctCount = answers.reduce((sum, answer, i) => sum + (answer === shuffledQuestions[i].correct ? 1 : 0), 0);
-            const totalQuestions = shuffledQuestions.length;
-            const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
-
-            doc.text(`Nível ${candidateData.level}`, 20, y);
-            doc.text(`Acertos: ${correctCount} de ${totalQuestions}`, 20, y + 10);
-            doc.text(`Precisão: ${scorePercentage}%`, 20, y + 20);
-
-            doc.save(`Resultado_Teste_Excel_${candidateData.name}_${candidateData.level}.pdf`);
-        }
-    </script>
-</body>
-</html>
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/index.html b/index.html
+index b91a153092ca1906a29cadeb85ce547579517448..16c5108ea9cc4b4ebadbafd217161849c4cc1935 100644
+--- a/index.html
++++ b/index.html
+@@ -823,59 +823,58 @@
+             } else if (!/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)) {
+                 emailError.textContent = 'Digite um e-mail válido (exemplo: nome@dominio.com).';
+                 emailInput.parentElement.classList.add('invalid');
+                 isValid = false;
+             }
+ 
+             if (!levelInput.value) {
+                 levelError.textContent = 'Por favor, selecione o nível do teste.';
+                 levelInput.parentElement.classList.add('invalid');
+                 isValid = false;
+             }
+ 
+             if (!isValid) return;
+ 
+             startButton.disabled = true;
+             startLoading.classList.remove('hidden');
+ 
+             // Filtrar questões do nível selecionado
+             currentLevel = selectedLevel;
+             shuffledQuestions = shuffleArray([...questions.filter(q => q.level === selectedLevel)]);
+ 
+             setTimeout(() => {
+                 candidateData = { name, email, level: levels[selectedLevel] };
+                 testStartTime = new Date();
+                 document.getElementById('loginForm').classList.add('hidden');
+-                document.getElementById('testArea').classList.remove('hidden');
+-                document.getElementById('timer').classList.remove('hidden');
+-                document.getElementById('levelDescription').textContent = levelDescriptions[selectedLevel];
+-                showQuestion();
+-                startTimer();
+-                startButton.disabled = false;
+-                startLoading.classList.add('hidden');
+-            }, 1000);
+-        }
++                document.getElementById('testArea').classList.remove('hidden');
++                document.getElementById('timer').classList.remove('hidden');
++                document.getElementById('levelDescription').textContent = levelDescriptions[selectedLevel];
++                showQuestion();
++                startButton.disabled = false;
++                startLoading.classList.add('hidden');
++            }, 1000);
++        }
+ 
+         // Prevenir cópia e clique direito
+         document.addEventListener('DOMContentLoaded', () => {
+             const testArea = document.getElementById('testArea');
+             testArea.addEventListener('contextmenu', (e) => {
+                 e.preventDefault();
+                 alert('A cópia de questões não é permitida.');
+             });
+             testArea.addEventListener('selectstart', (e) => {
+                 e.preventDefault();
+             });
+             document.addEventListener('keydown', (e) => {
+                 if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+                     e.preventDefault();
+                     alert('A cópia de questões não é permitida.');
+                 }
+             });
+         });
+ 
+         window.addEventListener('beforeunload', (event) => {
+             if (!document.getElementById('loginForm').classList.contains('hidden')) return;
+             event.preventDefault();
+             event.returnValue = 'Você está no meio do teste. Sair reiniciará o teste. Deseja continuar?';
+         });
+ 
+@@ -918,54 +917,55 @@
+                 option.classList.remove('selected');
+                 option.classList.add('disabled');
+                 if (index === answerIndex) {
+                     option.classList.add('selected');
+                 }
+             });
+             
+             answers[currentQuestionIndex] = answerIndex;
+             console.log(`Questão ${currentQuestionIndex + 1}: Resposta selecionada = ${answerIndex}, Correta = ${shuffledQuestions[currentQuestionIndex].correct}`);
+             
+             setTimeout(() => {
+                 nextQuestion();
+             }, 500);
+         }
+         
+         function nextQuestion() {
+             currentQuestionIndex++;
+             console.log(`Próxima questão: currentQuestionIndex = ${currentQuestionIndex}, currentLevel = ${levels[currentLevel]}`);
+             if (currentQuestionIndex >= shuffledQuestions.length) {
+                 finishTest();
+             } else {
+                 showQuestion();
+             }
+         }
+         
+-        function startTimer() {
+-            const timerElement = document.getElementById('timer');
+-            timer = setInterval(() => {
+-                timeLeft--;
++        function startTimer() {
++            const timerElement = document.getElementById('timer');
++            clearInterval(timer);
++            timer = setInterval(() => {
++                timeLeft--;
+                 const minutes = Math.floor(timeLeft / 60);
+                 const seconds = timeLeft % 60;
+                 timerElement.textContent = `⏰ ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                 if (timeLeft <= 10) {
+                     timerElement.classList.add('warning');
+                 }
+                 if (timeLeft <= 0) {
+                     answers[currentQuestionIndex] = -1;
+                     alert('Tempo esgotado para esta questão!');
+                     nextQuestion();
+                 }
+             }, 1000);
+         }
+         
+         function resetTimer() {
+             clearInterval(timer);
+             timeLeft = 60;
+             const timerElement = document.getElementById('timer');
+             timerElement.textContent = `⏰ 01:00`;
+             timerElement.classList.remove('warning');
+             startTimer();
+         }
+         
+         function finishTest() {
+             clearInterval(timer);
+@@ -1002,26 +1002,26 @@
+             const { jsPDF } = window.jspdf;
+             const doc = new jsPDF();
+             const date = new Date().toLocaleString('pt-BR');
+ 
+             doc.setFontSize(16);
+             doc.text('Resultado do Teste Profissional de Excel', 20, 20);
+             doc.setFontSize(12);
+             doc.text(`Candidato: ${candidateData.name}`, 20, 30);
+             doc.text(`E-mail: ${candidateData.email}`, 20, 40);
+             doc.text(`Nível: ${candidateData.level}`, 20, 50);
+             doc.text(`Data: ${date}`, 20, 60);
+ 
+             let y = 80;
+             const correctCount = answers.reduce((sum, answer, i) => sum + (answer === shuffledQuestions[i].correct ? 1 : 0), 0);
+             const totalQuestions = shuffledQuestions.length;
+             const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
+ 
+             doc.text(`Nível ${candidateData.level}`, 20, y);
+             doc.text(`Acertos: ${correctCount} de ${totalQuestions}`, 20, y + 10);
+             doc.text(`Precisão: ${scorePercentage}%`, 20, y + 20);
+ 
+             doc.save(`Resultado_Teste_Excel_${candidateData.name}_${candidateData.level}.pdf`);
+         }
+     </script>
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+ 
+EOF
+)
