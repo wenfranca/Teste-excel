@@ -849,7 +849,6 @@
                 document.getElementById('timer').classList.remove('hidden');
                 document.getElementById('levelDescription').textContent = levelDescriptions[selectedLevel];
                 showQuestion();
-                startTimer();
                 startButton.disabled = false;
                 startLoading.classList.add('hidden');
             }, 1000);
@@ -942,6 +941,7 @@
         
         function startTimer() {
             const timerElement = document.getElementById('timer');
+            clearInterval(timer);
             timer = setInterval(() => {
                 timeLeft--;
                 const minutes = Math.floor(timeLeft / 60);
